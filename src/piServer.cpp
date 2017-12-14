@@ -17,7 +17,6 @@ using namespace std;
 
 namespace piServerNs
 {
-
 pthread_t piServer::CserverThreadHandle;
 pthread_t piServer::DserverThreadHandle;
 int piServer::CserverSocketId;
@@ -55,7 +54,7 @@ void * piServer::DiscoveryServerTask(void *)
 	DiscoveryServer Dserver;
 	while(1)
 	{
-//		Bserver.PrintAliveMsg();
+		//		Bserver.PrintAliveMsg();
 		sleep(1);
 	}
 }
