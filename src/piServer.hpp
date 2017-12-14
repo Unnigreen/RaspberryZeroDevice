@@ -9,6 +9,7 @@
 #define PISERVER_HPP_
 
 #include <pthread.h>
+#include <arpa/inet.h>
 
 namespace piServerNs
 {
@@ -51,6 +52,9 @@ public:
 class DiscoveryServer : public piServer
 {
 private:
+	struct sockaddr_in RecvAddr;
+	struct sockaddr_in srvrAddr;
+	char buffer[1024];
 
 public:
 	DiscoveryServer();
@@ -59,6 +63,10 @@ public:
 	void SendMessage();
 	void SendSignal();
 	void PrintAliveMsg(void);
+	void PrintReceivedMsg(char *);
+
+	void WaitForDiscoveryPing();
+	void DiscoveryServerResponse();
 };
 
 }

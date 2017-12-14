@@ -11,8 +11,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
-#include <arpa/inet.h>
 #include "SystemSettings.h"
+//#include <arpa/inet.h>
 
 using namespace std;
 
@@ -45,7 +45,7 @@ void * piServer::CommunicationServerTask(void *)
 	CommunicationServer Cserver;
 	while(1)
 	{
-		Cserver.PrintAliveMsg();
+//		Cserver.PrintAliveMsg();
 		sleep(1);
 	}
 }
@@ -53,11 +53,12 @@ void * piServer::CommunicationServerTask(void *)
 void * piServer::DiscoveryServerTask(void *)
 {
 	DiscoveryServer Dserver;
-	while(1)
-	{
-		//		Bserver.PrintAliveMsg();
-		sleep(1);
+
+	while(1){
+		Dserver.WaitForDiscoveryPing();
+		Dserver.DiscoveryServerResponse();
 	}
+
 }
 
 CommunicationServer::CommunicationServer()
@@ -72,39 +73,43 @@ CommunicationServer::~CommunicationServer()
 
 DiscoveryServer::DiscoveryServer()
 {
-	int  nBytes;
-	socklen_t nLen;
-	char buffer[1024];
-	struct sockaddr_in NetAddr;
-	struct sockaddr_in RecvAddr;
-
 	/*Create UDP socket*/
 	DserverSocketId = socket(PF_INET, SOCK_DGRAM, 0);
 
 	/*Configure settings in address struct*/
-	NetAddr.sin_family = AF_INET;
-	NetAddr.sin_port = htons(D_SERVER_PORT);
-	NetAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	memset(NetAddr.sin_zero, '\0', sizeof(NetAddr.sin_zero));
+	srvrAddr.sin_family = AF_INET;
+	srvrAddr.sin_port = htons(D_SERVER_PORT);
+	srvrAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	memset(srvrAddr.sin_zero, '\0', sizeof(srvrAddr.sin_zero));
 
-	bind(DserverSocketId, (struct sockaddr*)&NetAddr, sizeof(NetAddr));
-	nBytes = 10;
-
-	nLen = sizeof(RecvAddr);
-	while(1){
-		recvfrom(DserverSocketId, (void*)buffer, nBytes, 0, (struct sockaddr *)&RecvAddr, &nLen);
-		NetAddr.sin_addr.s_addr = RecvAddr.sin_addr.s_addr;
-		for(int c = 0; c < 5; c++){
-			sendto(DserverSocketId, (void*)buffer, nBytes, 0, (struct sockaddr *)&NetAddr, sizeof(NetAddr));
-			PrintAliveMsg();
-			sleep(1);
-		}
-	}
+	bind(DserverSocketId, (struct sockaddr*)&srvrAddr, sizeof(srvrAddr));
 }
 
 DiscoveryServer::~DiscoveryServer()
 {
 
+}
+
+void DiscoveryServer::WaitForDiscoveryPing(void)
+{
+	unsigned int nBytes = 10;
+	socklen_t nLen = sizeof(RecvAddr);
+
+	recvfrom(DserverSocketId, (void*)buffer, nBytes, 0, (struct sockaddr *)&RecvAddr, &nLen);
+}
+
+void DiscoveryServer::DiscoveryServerResponse(void)
+{
+	struct sockaddr_in SendAddr;
+	unsigned int nBytes = 10;
+
+	SendAddr = RecvAddr;
+	for(int c = 0; c < 5; c++){
+		sendto(DserverSocketId, (void*)buffer, nBytes, 0, (struct sockaddr *)&SendAddr, sizeof(SendAddr));
+		PrintAliveMsg();
+		PrintReceivedMsg(buffer);
+		sleep(1);
+	}
 }
 
 void CommunicationServer::SendMessage()
@@ -135,6 +140,11 @@ void CommunicationServer::PrintAliveMsg(void)
 void DiscoveryServer::PrintAliveMsg(void)
 {
 	std::cout << "B-Server alive" << std::endl;
+}
+
+void DiscoveryServer::PrintReceivedMsg(char * msg)
+{
+	std::cout << "B-Server received msg :" << msg << std::endl;
 }
 
 }
