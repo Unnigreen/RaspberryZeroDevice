@@ -24,7 +24,7 @@ int piServer::DserverSocketId;
 
 piServer::piServer()
 {
-
+	// constructor
 }
 
 piServer::~piServer()
