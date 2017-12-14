@@ -12,6 +12,7 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include "SystemSettings.h"
 
 using namespace std;
 
@@ -83,7 +84,7 @@ DiscoveryServer::DiscoveryServer()
 
 	/*Configure settings in address struct*/
 	NetAddr.sin_family = AF_INET;
-	NetAddr.sin_port = htons(7891);
+	NetAddr.sin_port = htons(D_SERVER_PORT);
 	NetAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	memset(NetAddr.sin_zero, '\0', sizeof(NetAddr.sin_zero));
 
