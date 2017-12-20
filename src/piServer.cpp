@@ -45,8 +45,9 @@ void * piServer::CommunicationServerTask(void *)
 	CommunicationServer Cserver;
 	while(1)
 	{
-//		Cserver.PrintAliveMsg();
-		sleep(1);
+		Cserver.WaitForCommunicationServerConnection();
+		Cserver.PrintAliveMsg();
+		Cserver.ClientService();
 	}
 }
 
@@ -63,7 +64,18 @@ void * piServer::DiscoveryServerTask(void *)
 
 CommunicationServer::CommunicationServer()
 {
-	// open tcp server socket
+	/*Create TCP socket*/
+	CserverSocketId = socket(PF_INET, SOCK_STREAM, 0);
+	ConnectionSocketId = 0;
+
+	/*Configure settings in address struct*/
+	srvrAddr.sin_family = AF_INET;
+	srvrAddr.sin_port = htons(C_SERVER_PORT);
+	srvrAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	memset(srvrAddr.sin_zero, '\0', sizeof(srvrAddr.sin_zero));
+
+	bind(CserverSocketId, (struct sockaddr*)&srvrAddr, sizeof(srvrAddr));
+	listen(CserverSocketId, 5);
 }
 
 CommunicationServer::~CommunicationServer()
@@ -93,23 +105,44 @@ DiscoveryServer::~DiscoveryServer()
 void DiscoveryServer::WaitForDiscoveryPing(void)
 {
 	unsigned int nBytes = 10;
-	socklen_t nLen = sizeof(RecvAddr);
+	socklen_t AddrLen = sizeof(ClntAddr);
 
-	recvfrom(DserverSocketId, (void*)buffer, nBytes, 0, (struct sockaddr *)&RecvAddr, &nLen);
+	recvfrom(DserverSocketId, (void*)RxBuffer, nBytes, 0, (struct sockaddr *)&ClntAddr, &AddrLen);
 }
 
 void DiscoveryServer::DiscoveryServerResponse(void)
 {
 	struct sockaddr_in SendAddr;
-	unsigned int nBytes = 10;
+	unsigned int TxLen = 10;
 
-	SendAddr = RecvAddr;
+	SendAddr = ClntAddr;
 	for(int c = 0; c < 5; c++){
-		sendto(DserverSocketId, (void*)buffer, nBytes, 0, (struct sockaddr *)&SendAddr, sizeof(SendAddr));
+		sendto(DserverSocketId, (void*)TxBuffer, TxLen, 0, (struct sockaddr *)&SendAddr, sizeof(SendAddr));
 		PrintAliveMsg();
-		PrintReceivedMsg(buffer);
+		PrintReceivedMsg(RxBuffer);
 		sleep(1);
 	}
+}
+
+void CommunicationServer::WaitForCommunicationServerConnection(void)
+{
+	socklen_t AddrLen = sizeof(ClntAddr);
+
+	ConnectionSocketId = accept(CserverSocketId, (struct sockaddr *)&ClntAddr, &AddrLen);
+}
+
+void CommunicationServer::ClientService(void)
+{
+	struct sockaddr_in SendAddr;
+
+	strcpy(TxBuffer, "Unnikrishan");
+	SendAddr = ClntAddr;
+	while(1){
+		recv(ConnectionSocketId, RxBuffer, C_SERVER_MAX_RX_BUFFER_SIZE, 0);
+		send(ConnectionSocketId, TxBuffer, strlen(TxBuffer), 0);
+		PrintAliveMsg();
+	}
+
 }
 
 void CommunicationServer::SendMessage()

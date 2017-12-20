@@ -10,6 +10,7 @@
 
 #include <pthread.h>
 #include <arpa/inet.h>
+#include "SystemSettings.h"
 
 namespace piServerNs
 {
@@ -39,10 +40,18 @@ public:
 class CommunicationServer : public piServer
 {
 private:
+	struct sockaddr_in ClntAddr;
+	struct sockaddr_in srvrAddr;
+	int ConnectionSocketId;
+	char RxBuffer[C_SERVER_MAX_RX_BUFFER_SIZE];
+	char TxBuffer[C_SERVER_MAX_TX_BUFFER_SIZE];
 
 public:
 	CommunicationServer();
 	virtual ~CommunicationServer();
+
+	void WaitForCommunicationServerConnection();
+	void ClientService();
 
 	void SendMessage();
 	void SendSignal();
@@ -52,9 +61,10 @@ public:
 class DiscoveryServer : public piServer
 {
 private:
-	struct sockaddr_in RecvAddr;
+	struct sockaddr_in ClntAddr;
 	struct sockaddr_in srvrAddr;
-	char buffer[1024];
+	char RxBuffer[D_SERVER_MAX_RX_BUFFER_SIZE];
+	char TxBuffer[D_SERVER_MAX_TX_BUFFER_SIZE];
 
 public:
 	DiscoveryServer();
