@@ -46,8 +46,9 @@ void * piServer::CommunicationServerTask(void *)
 	while(1)
 	{
 		Cserver.WaitForCommunicationServerConnection();
-		Cserver.PrintAliveMsg();
+		Cserver.PrintAliveMsg("Connected");
 		Cserver.ClientService();
+		Cserver.PrintAliveMsg("Disconnected");
 	}
 }
 
@@ -107,6 +108,7 @@ void DiscoveryServer::WaitForDiscoveryPing(void)
 	unsigned int nBytes = 10;
 	socklen_t AddrLen = sizeof(ClntAddr);
 
+	memset(RxBuffer, 0, sizeof(RxBuffer));
 	recvfrom(DserverSocketId, (void*)RxBuffer, nBytes, 0, (struct sockaddr *)&ClntAddr, &AddrLen);
 }
 
@@ -116,10 +118,11 @@ void DiscoveryServer::DiscoveryServerResponse(void)
 	unsigned int TxLen = 10;
 
 	SendAddr = ClntAddr;
+	memset(TxBuffer, 0, sizeof(TxBuffer));
+	strcpy(TxBuffer, RxBuffer);
 	for(int c = 0; c < 5; c++){
 		sendto(DserverSocketId, (void*)TxBuffer, TxLen, 0, (struct sockaddr *)&SendAddr, sizeof(SendAddr));
-		PrintAliveMsg();
-		PrintReceivedMsg(RxBuffer);
+		PrintAliveMsg(RxBuffer);
 		sleep(1);
 	}
 }
@@ -138,9 +141,14 @@ void CommunicationServer::ClientService(void)
 	strcpy(TxBuffer, "Unnikrishan");
 	SendAddr = ClntAddr;
 	while(1){
-		recv(ConnectionSocketId, RxBuffer, C_SERVER_MAX_RX_BUFFER_SIZE, 0);
+		memset(RxBuffer, 0, sizeof(RxBuffer));
+		memset(TxBuffer, 0, sizeof(TxBuffer));
+		if(recv(ConnectionSocketId, RxBuffer, C_SERVER_MAX_RX_BUFFER_SIZE, 0) == 0)
+		{
+			return;
+		}
 		send(ConnectionSocketId, TxBuffer, strlen(TxBuffer), 0);
-		PrintAliveMsg();
+		PrintAliveMsg(RxBuffer);
 	}
 
 }
@@ -165,19 +173,14 @@ void DiscoveryServer::SendSignal()
 
 }
 
-void CommunicationServer::PrintAliveMsg(void)
+void CommunicationServer::PrintAliveMsg(char * msg)
 {
-	std::cout << "C-Server alive" << std::endl;
+	std::cout << "C-Server alive:" << msg << std::endl;
 }
 
-void DiscoveryServer::PrintAliveMsg(void)
+void DiscoveryServer::PrintAliveMsg(char * msg)
 {
-	std::cout << "B-Server alive" << std::endl;
-}
-
-void DiscoveryServer::PrintReceivedMsg(char * msg)
-{
-	std::cout << "B-Server received msg :" << msg << std::endl;
+	std::cout << "B-Server alive:" << msg << std::endl;
 }
 
 }

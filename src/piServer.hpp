@@ -34,7 +34,7 @@ public:
 
 	virtual void SendMessage(void) = 0;
 	virtual void SendSignal(void) = 0;
-	virtual void PrintAliveMsg(void) = 0;
+	virtual void PrintAliveMsg(char *) = 0;
 };
 
 class CommunicationServer : public piServer
@@ -55,7 +55,7 @@ public:
 
 	void SendMessage();
 	void SendSignal();
-	void PrintAliveMsg(void);
+	void PrintAliveMsg(char *);
 };
 
 class DiscoveryServer : public piServer
@@ -72,8 +72,7 @@ public:
 
 	void SendMessage();
 	void SendSignal();
-	void PrintAliveMsg(void);
-	void PrintReceivedMsg(char *);
+	void PrintAliveMsg(char *);
 
 	void WaitForDiscoveryPing();
 	void DiscoveryServerResponse();

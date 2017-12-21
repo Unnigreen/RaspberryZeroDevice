@@ -22,9 +22,9 @@ int main() {
 
 	piServerNs::piServer::StartTask();
 
+	cout << "MAIN RUNNING " << endl;
 	while(1)
 	{
-		cout << "MAIN RUNNING " << endl;
 		sleep(10);
 	}
 	return 0;
