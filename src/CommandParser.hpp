@@ -8,6 +8,8 @@
 #ifndef COMMANDPARSER_HPP_
 #define COMMANDPARSER_HPP_
 
+#include <pthread.h>
+
 namespace Command_Parser
 {
 
@@ -22,16 +24,20 @@ typedef struct
 
 class CommandParser
 {
+private:
+	static int msqid;
+	static pthread_t CommandParserThreadHandle;
+
+	void ProcessInputMessage();
+	bool SendSignal();
+
 public:
 	CommandParser();
 	~CommandParser();
 
-private:
-	int msqid;
-
-	void ProcessInputMessage();
-	bool SendMessage(CommandStruct);
-	bool SendSignal();
+	static bool SendMessage(CommandStruct *);
+	static void TaskEntry();
+	static void * CommandParserTask(void *);
 };
 
 }

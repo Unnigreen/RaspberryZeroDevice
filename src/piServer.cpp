@@ -6,12 +6,14 @@
  */
 #include "piServer.hpp"
 
+#include <pthread.h>
 #include <iostream>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
 #include "SystemSettings.h"
+#include "CommandParser.hpp"
 //#include <arpa/inet.h>
 
 using namespace std;
@@ -120,6 +122,12 @@ void DiscoveryServer::DiscoveryServerResponse(void)
 	SendAddr = ClntAddr;
 	memset(TxBuffer, 0, sizeof(TxBuffer));
 	strcpy(TxBuffer, RxBuffer);
+
+	Command_Parser::CommandStruct cmdTx;
+	cmdTx.CommandType = 7;
+	Command_Parser::CommandParser::SendMessage(&cmdTx);
+
+
 	for(int c = 0; c < 5; c++){
 		sendto(DserverSocketId, (void*)TxBuffer, TxLen, 0, (struct sockaddr *)&SendAddr, sizeof(SendAddr));
 		PrintAliveMsg(RxBuffer);
@@ -175,12 +183,12 @@ void DiscoveryServer::SendSignal()
 
 void CommunicationServer::PrintAliveMsg(char * msg)
 {
-	std::cout << "C-Server alive:" << msg << std::endl;
+	cout << "C-Server alive:" << msg << endl;
 }
 
 void DiscoveryServer::PrintAliveMsg(char * msg)
 {
-	std::cout << "B-Server alive:" << msg << std::endl;
+	cout << "B-Server alive:" << msg << endl;
 }
 
 }

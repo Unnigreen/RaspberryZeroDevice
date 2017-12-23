@@ -11,6 +11,7 @@
 #include <pthread.h>
 
 #include "piServer.hpp"
+#include "CommandParser.hpp"
 
 using namespace std;
 
@@ -21,6 +22,7 @@ using namespace std;
 int main() {
 
 	piServerNs::piServer::StartTask();
+	Command_Parser::CommandParser::TaskEntry();
 
 	cout << "MAIN RUNNING " << endl;
 	while(1)
