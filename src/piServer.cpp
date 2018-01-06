@@ -45,6 +45,7 @@ int piServer::StartTask()
 void * piServer::CommunicationServerTask(void *)
 {
 	CommunicationServer Cserver;
+
 	while(1)
 	{
 		Cserver.WaitForCommunicationServerConnection();
