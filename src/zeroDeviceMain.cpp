@@ -16,9 +16,6 @@
 using namespace std;
 
 // test code start
-//#include <fcntl.h>
-//#include <sys/stat.h>
-//#include <mqueue.h>
 //void *thread_main_1(void *x_void_ptr);
 //void *thread_main_2(void *x_void_ptr);
 //void *thread_main_3(void *x_void_ptr);
@@ -31,22 +28,9 @@ int main() {
 
 	cout << "MAIN RUNNING " << endl;
 
-	// test code start
-//	pthread_t ThreadHandle_1;
-//	pthread_t ThreadHandle_2;
-//	pthread_create(&ThreadHandle_1, NULL, thread_main_1, NULL);
-//	pthread_create(&ThreadHandle_2, NULL, thread_main_2, NULL);
-	// test code end
-
-	Command_Parser::msgStruct msg;
 	while(1)
 	{
-		sleep(5);
-		cout << "MAIN RUNNING " << endl;
-
-		msg.CommandType = '5';
-		msg.msg.abc.a = 55;
-		Command_Parser::CommandParser::SendMessage(&msg);
+		sleep(10);
 	}
 	return 0;
 }
@@ -61,48 +45,19 @@ typedef struct
 
 void *thread_main_1(void *x_void_ptr)
 {
-	struct mq_attr attr;
-	mqd_t MsgQ_ID;
-	testMsg msgRx;
-
-	attr.mq_flags = 0;
-	attr.mq_maxmsg = 10;
-	attr.mq_msgsize = sizeof(testMsg);
-	attr.mq_curmsgs = 0;
-
-	MsgQ_ID = mq_open("/MyMsgQ", O_CREAT | O_RDWR, 0777, &attr);
-	cout << "thread 1 MsgQ_ID " << MsgQ_ID << endl;
-	msgRx.a = 11;
-	msgRx.b = 22;
-	msgRx.c = 33;
-	msgRx.d = 44;
 	while(1)
 	{
-		mq_send(MsgQ_ID, (char *)&msgRx, sizeof(msgRx), 0);
-		cout << "thread 1 sent message" << endl;
+		cout << "thread 1" << endl;
 		sleep(1);
 	}
 }
 
 void *thread_main_2(void *x_void_ptr)
 {
-	struct mq_attr attr;
-	mqd_t MsgQ_ID;
-	testMsg msgRx;
-	unsigned int msgPrio;
-
-	attr.mq_flags = 0;
-	attr.mq_maxmsg = 15;
-	attr.mq_msgsize = sizeof(testMsg);
-	attr.mq_curmsgs = 0;
-
-	MsgQ_ID = mq_open("/MyMsgQ", O_CREAT | O_RDWR, 0777, &attr);
-	cout << "thread 2 MsgQ_ID " << MsgQ_ID << endl;
 	while(1)
 	{
-
-		mq_receive(MsgQ_ID, (char *)&msgRx, sizeof(msgRx), &msgPrio);
-		cout << "Thread 2 rxed message: a-" << msgRx.a << " b-" << msgRx.b << " c-" << msgRx.c << " d-" << msgRx.d << endl;
+		cout << "thread 2" << endl;
+		sleep(1);
 	}
 }
 

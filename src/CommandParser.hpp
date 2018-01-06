@@ -39,7 +39,7 @@ private:
 	static pthread_t CommandParserThreadHandle;
 	static mqd_t msgQ_ID;
 
-	void ProcessInputMessage();
+	void ProcessInputMessage(msgStruct*);
 	bool SendSignal();
 
 public:

@@ -50,14 +50,9 @@ void CommandParser::Run()
 	ssize_t msgLen = 0;
 
 	cout << "CommandParser started" << endl;
-	msgStruct msg;
-	msg.CommandType = '2';
-	msg.msg.abc.a = 22;
-	SendMessage(&msg);
 	while(1)
 	{
 		msgLen = mq_receive(msgQ_ID, (char *)&msgRcvd, sizeof(msgStruct), &msgPrio);
-		cout << "msg rxed in CommandParser - type: " << msgRcvd.CommandType << " val: " << msgRcvd.msg.abc.a << " len: " << msgLen << endl;
 	}
 }
 
@@ -69,7 +64,7 @@ void * CommandParser::CommandParserTask(void *)
 	return (void *)0;
 }
 
-void CommandParser::ProcessInputMessage()
+void CommandParser::ProcessInputMessage(msgStruct* msgRcvd)
 {
 
 }
