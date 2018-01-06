@@ -10,21 +10,27 @@
 #include <unistd.h>
 #include <sys/msg.h>
 #include <sys/ipc.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 using namespace std;
 
 namespace Command_Parser
 {
-
-int CommandParser::msqid;
 pthread_t CommandParser::CommandParserThreadHandle;
+mqd_t CommandParser::msgQ_ID;
 
 CommandParser::CommandParser()
 {
-	msqid = 0;
+	struct mq_attr attr;
 
-	msqid = msgget(1234, IPC_CREAT);
+	attr.mq_flags = 0;
+	attr.mq_maxmsg = 10;
+	attr.mq_msgsize = sizeof(msgStruct);
+	attr.mq_curmsgs = 0;
 
+	msgQ_ID = mq_open("/MyMsgQ", O_CREAT | O_RDWR, 0777, &attr);
+	cout << "CommandParser msgQ_ID " << msgQ_ID << endl;
 }
 
 CommandParser::~CommandParser()
@@ -37,18 +43,30 @@ void CommandParser::TaskEntry()
 	pthread_create(&CommandParserThreadHandle, NULL, CommandParserTask, NULL);
 }
 
+void CommandParser::Run()
+{
+	msgStruct msgRcvd;
+	unsigned int msgPrio;
+	ssize_t msgLen = 0;
+
+	cout << "CommandParser started" << endl;
+	msgStruct msg;
+	msg.CommandType = '2';
+	msg.msg.abc.a = 22;
+	SendMessage(&msg);
+	while(1)
+	{
+		msgLen = mq_receive(msgQ_ID, (char *)&msgRcvd, sizeof(msgStruct), &msgPrio);
+		cout << "msg rxed in CommandParser - type: " << msgRcvd.CommandType << " val: " << msgRcvd.msg.abc.a << " len: " << msgLen << endl;
+	}
+}
+
 void * CommandParser::CommandParserTask(void *)
 {
 	CommandParser parser;
-	CommandStruct cmdRcv;
-	ssize_t len = 0;
+	parser.Run();
 
-	while(1)
-	{
-		len = msgrcv(msqid, (void *)&cmdRcv, sizeof(cmdRcv), 0, MSG_NOERROR);
-//		cout << "Command parser msg : " << len << endl;
-		printf("Command parser msg : %d, %d \n", len, cmdRcv.CommandType);
-	}
+	return (void *)0;
 }
 
 void CommandParser::ProcessInputMessage()
@@ -56,11 +74,12 @@ void CommandParser::ProcessInputMessage()
 
 }
 
-bool CommandParser::SendMessage(CommandStruct *cmd)
+bool CommandParser::SendMessage(msgStruct *msg)
 {
 	bool retVal = false;
+	unsigned int msgSentStatus;
 
-	msgsnd(msqid, (void *)cmd, sizeof(cmd), IPC_NOWAIT);
+	msgSentStatus = mq_send(msgQ_ID, (char *)msg, sizeof(msgStruct), 0);
 	return retVal;
 }
 

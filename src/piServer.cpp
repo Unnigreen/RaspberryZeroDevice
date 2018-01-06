@@ -14,7 +14,6 @@
 #include <string.h>
 #include "SystemSettings.h"
 #include "CommandParser.hpp"
-//#include <arpa/inet.h>
 
 using namespace std;
 
@@ -124,9 +123,9 @@ void DiscoveryServer::DiscoveryServerResponse(void)
 	memset(TxBuffer, 0, sizeof(TxBuffer));
 	strcpy(TxBuffer, RxBuffer);
 
-	Command_Parser::CommandStruct cmdTx;
-	cmdTx.CommandType = 7;
-	Command_Parser::CommandParser::SendMessage(&cmdTx);
+//	Command_Parser::CommandStruct cmdTx;
+//	cmdTx.CommandType = 7;
+//	Command_Parser::CommandParser::SendMessage(&cmdTx);
 
 
 	for(int c = 0; c < 5; c++){

@@ -16,31 +16,37 @@
 using namespace std;
 
 // test code start
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <mqueue.h>
-void *thread_main_1(void *x_void_ptr);
-void *thread_main_2(void *x_void_ptr);
-void *thread_main_3(void *x_void_ptr);
+//#include <fcntl.h>
+//#include <sys/stat.h>
+//#include <mqueue.h>
+//void *thread_main_1(void *x_void_ptr);
+//void *thread_main_2(void *x_void_ptr);
+//void *thread_main_3(void *x_void_ptr);
 // test code end
 
 int main() {
 
 //	piServerNs::piServer::StartTask();
-//	Command_Parser::CommandParser::TaskEntry();
+	Command_Parser::CommandParser::TaskEntry();
 
 	cout << "MAIN RUNNING " << endl;
 
 	// test code start
-	pthread_t ThreadHandle_1;
-	pthread_t ThreadHandle_2;
-	pthread_create(&ThreadHandle_1, NULL, thread_main_1, NULL);
-	pthread_create(&ThreadHandle_2, NULL, thread_main_2, NULL);
+//	pthread_t ThreadHandle_1;
+//	pthread_t ThreadHandle_2;
+//	pthread_create(&ThreadHandle_1, NULL, thread_main_1, NULL);
+//	pthread_create(&ThreadHandle_2, NULL, thread_main_2, NULL);
 	// test code end
 
+	Command_Parser::msgStruct msg;
 	while(1)
 	{
-		sleep(10);
+		sleep(5);
+		cout << "MAIN RUNNING " << endl;
+
+		msg.CommandType = '5';
+		msg.msg.abc.a = 55;
+		Command_Parser::CommandParser::SendMessage(&msg);
 	}
 	return 0;
 }
@@ -73,7 +79,6 @@ void *thread_main_1(void *x_void_ptr)
 	while(1)
 	{
 		mq_send(MsgQ_ID, (char *)&msgRx, sizeof(msgRx), 0);
-//		cout << "thread running 1 " << endl;
 		cout << "thread 1 sent message" << endl;
 		sleep(1);
 	}
@@ -87,7 +92,7 @@ void *thread_main_2(void *x_void_ptr)
 	unsigned int msgPrio;
 
 	attr.mq_flags = 0;
-	attr.mq_maxmsg = 10;
+	attr.mq_maxmsg = 15;
 	attr.mq_msgsize = sizeof(testMsg);
 	attr.mq_curmsgs = 0;
 
@@ -97,9 +102,7 @@ void *thread_main_2(void *x_void_ptr)
 	{
 
 		mq_receive(MsgQ_ID, (char *)&msgRx, sizeof(msgRx), &msgPrio);
-//		cout << "thread running 2 " << endl;
 		cout << "Thread 2 rxed message: a-" << msgRx.a << " b-" << msgRx.b << " c-" << msgRx.c << " d-" << msgRx.d << endl;
-//		sleep(1);
 	}
 }
 
