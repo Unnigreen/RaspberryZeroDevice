@@ -6,13 +6,15 @@
  */
 #include "piServer.hpp"
 
+#include <pthread.h>
 #include <iostream>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
-#include <arpa/inet.h>
+
 #include "SystemSettings.h"
+#include "CommandParser.hpp"
 
 using namespace std;
 
@@ -25,7 +27,7 @@ int piServer::DserverSocketId;
 
 piServer::piServer()
 {
-
+	// constructor
 }
 
 piServer::~piServer()
@@ -43,26 +45,40 @@ int piServer::StartTask()
 void * piServer::CommunicationServerTask(void *)
 {
 	CommunicationServer Cserver;
+
 	while(1)
 	{
-		Cserver.PrintAliveMsg();
-		sleep(1);
+		Cserver.WaitForCommunicationServerConnection();
+		Cserver.PrintAliveMsg("Connected");
+		Cserver.ClientService();
+		Cserver.PrintAliveMsg("Disconnected");
 	}
 }
 
 void * piServer::DiscoveryServerTask(void *)
 {
 	DiscoveryServer Dserver;
-	while(1)
-	{
-		//		Bserver.PrintAliveMsg();
-		sleep(1);
+
+	while(1){
+		Dserver.WaitForDiscoveryPing();
+		Dserver.DiscoveryServerResponse();
 	}
 }
 
 CommunicationServer::CommunicationServer()
 {
-	// open tcp server socket
+	/*Create TCP socket*/
+	CserverSocketId = socket(PF_INET, SOCK_STREAM, 0);
+	ConnectionSocketId = 0;
+
+	/*Configure settings in address struct*/
+	srvrAddr.sin_family = AF_INET;
+	srvrAddr.sin_port = htons(C_SERVER_PORT);
+	srvrAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	memset(srvrAddr.sin_zero, '\0', sizeof(srvrAddr.sin_zero));
+
+	bind(CserverSocketId, (struct sockaddr*)&srvrAddr, sizeof(srvrAddr));
+	listen(CserverSocketId, 5);
 }
 
 CommunicationServer::~CommunicationServer()
@@ -72,39 +88,86 @@ CommunicationServer::~CommunicationServer()
 
 DiscoveryServer::DiscoveryServer()
 {
-	int  nBytes;
-	socklen_t nLen;
-	char buffer[1024];
-	struct sockaddr_in NetAddr;
-	struct sockaddr_in RecvAddr;
-
 	/*Create UDP socket*/
 	DserverSocketId = socket(PF_INET, SOCK_DGRAM, 0);
 
 	/*Configure settings in address struct*/
-	NetAddr.sin_family = AF_INET;
-	NetAddr.sin_port = htons(D_SERVER_PORT);
-	NetAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	memset(NetAddr.sin_zero, '\0', sizeof(NetAddr.sin_zero));
 
-	bind(DserverSocketId, (struct sockaddr*)&NetAddr, sizeof(NetAddr));
-	nBytes = 10;
+	srvrAddr.sin_family = AF_INET;
+	srvrAddr.sin_port = htons(D_SERVER_PORT);
+	srvrAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	memset(srvrAddr.sin_zero, '\0', sizeof(srvrAddr.sin_zero));
 
-	nLen = sizeof(RecvAddr);
-	while(1){
-		recvfrom(DserverSocketId, (void*)buffer, nBytes, 0, (struct sockaddr *)&RecvAddr, &nLen);
-		NetAddr.sin_addr.s_addr = RecvAddr.sin_addr.s_addr;
-		for(int c = 0; c < 5; c++){
-			sendto(DserverSocketId, (void*)buffer, nBytes, 0, (struct sockaddr *)&NetAddr, sizeof(NetAddr));
-			PrintAliveMsg();
-			sleep(1);
-		}
-	}
+	bind(DserverSocketId, (struct sockaddr*)&srvrAddr, sizeof(srvrAddr));
 }
 
 DiscoveryServer::~DiscoveryServer()
 {
 
+}
+
+void DiscoveryServer::WaitForDiscoveryPing(void)
+{
+	unsigned int nBytes = 10;
+	socklen_t AddrLen = sizeof(ClntAddr);
+
+	memset(RxBuffer, 0, sizeof(RxBuffer));
+	recvfrom(DserverSocketId, (void*)RxBuffer, nBytes, 0, (struct sockaddr *)&ClntAddr, &AddrLen);
+}
+
+void DiscoveryServer::DiscoveryServerResponse(void)
+{
+	struct sockaddr_in SendAddr;
+	unsigned int TxLen = 10;
+
+	SendAddr = ClntAddr;
+	memset(TxBuffer, 0, sizeof(TxBuffer));
+	strcpy(TxBuffer, RxBuffer);
+
+//	Command_Parser::CommandStruct cmdTx;
+//	cmdTx.CommandType = 7;
+//	Command_Parser::CommandParser::SendMessage(&cmdTx);
+
+
+	for(int c = 0; c < 5; c++){
+		sendto(DserverSocketId, (void*)TxBuffer, TxLen, 0, (struct sockaddr *)&SendAddr, sizeof(SendAddr));
+		PrintAliveMsg(RxBuffer);
+		sleep(1);
+	}
+}
+
+void CommunicationServer::WaitForCommunicationServerConnection(void)
+{
+	socklen_t AddrLen = sizeof(ClntAddr);
+
+	ConnectionSocketId = accept(CserverSocketId, (struct sockaddr *)&ClntAddr, &AddrLen);
+}
+
+void CommunicationServer::ClientService(void)
+{
+	struct sockaddr_in SendAddr;
+	int rxLen;
+
+	strcpy(TxBuffer, "Unnikrishan");
+	SendAddr = ClntAddr;
+	while(1){
+		memset(RxBuffer, 0, sizeof(RxBuffer));
+		memset(TxBuffer, 0, sizeof(TxBuffer));
+		rxLen = recv(ConnectionSocketId, RxBuffer, C_SERVER_MAX_RX_BUFFER_SIZE, 0);
+		if(rxLen > 0)
+		{
+			Command_Parser::CommandParser::SendMessage(RxBuffer, rxLen);
+//			PrintAliveMsg(RxBuffer);
+		}
+		else if(rxLen < 0)
+		{
+			/* some error*/
+		}
+		else
+		{
+			return;
+		}
+	}
 }
 
 void CommunicationServer::SendMessage()
@@ -127,14 +190,14 @@ void DiscoveryServer::SendSignal()
 
 }
 
-void CommunicationServer::PrintAliveMsg(void)
+void CommunicationServer::PrintAliveMsg(char * msg)
 {
-	std::cout << "C-Server alive" << std::endl;
+	cout << "C-Server alive:" << msg << endl;
 }
 
-void DiscoveryServer::PrintAliveMsg(void)
+void DiscoveryServer::PrintAliveMsg(char * msg)
 {
-	std::cout << "B-Server alive" << std::endl;
+	cout << "B-Server alive:" << msg << endl;
 }
 
 }

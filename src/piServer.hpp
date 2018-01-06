@@ -9,6 +9,8 @@
 #define PISERVER_HPP_
 
 #include <pthread.h>
+#include <arpa/inet.h>
+#include "SystemSettings.h"
 
 namespace piServerNs
 {
@@ -32,25 +34,37 @@ public:
 
 	virtual void SendMessage(void) = 0;
 	virtual void SendSignal(void) = 0;
-	virtual void PrintAliveMsg(void) = 0;
+	virtual void PrintAliveMsg(char *) = 0;
 };
 
 class CommunicationServer : public piServer
 {
 private:
+	struct sockaddr_in ClntAddr;
+	struct sockaddr_in srvrAddr;
+	int ConnectionSocketId;
+	char RxBuffer[C_SERVER_MAX_RX_BUFFER_SIZE];
+	char TxBuffer[C_SERVER_MAX_TX_BUFFER_SIZE];
 
 public:
 	CommunicationServer();
 	virtual ~CommunicationServer();
 
+	void WaitForCommunicationServerConnection();
+	void ClientService();
+
 	void SendMessage();
 	void SendSignal();
-	void PrintAliveMsg(void);
+	void PrintAliveMsg(char *);
 };
 
 class DiscoveryServer : public piServer
 {
 private:
+	struct sockaddr_in ClntAddr;
+	struct sockaddr_in srvrAddr;
+	char RxBuffer[D_SERVER_MAX_RX_BUFFER_SIZE];
+	char TxBuffer[D_SERVER_MAX_TX_BUFFER_SIZE];
 
 public:
 	DiscoveryServer();
@@ -58,7 +72,10 @@ public:
 
 	void SendMessage();
 	void SendSignal();
-	void PrintAliveMsg(void);
+	void PrintAliveMsg(char *);
+
+	void WaitForDiscoveryPing();
+	void DiscoveryServerResponse();
 };
 
 }
