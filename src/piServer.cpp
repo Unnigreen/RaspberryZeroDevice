@@ -62,7 +62,6 @@ void * piServer::DiscoveryServerTask(void *)
 		Dserver.WaitForDiscoveryPing();
 		Dserver.DiscoveryServerResponse();
 	}
-
 }
 
 CommunicationServer::CommunicationServer()
@@ -145,20 +144,28 @@ void CommunicationServer::WaitForCommunicationServerConnection(void)
 void CommunicationServer::ClientService(void)
 {
 	struct sockaddr_in SendAddr;
+	int rxLen;
 
 	strcpy(TxBuffer, "Unnikrishan");
 	SendAddr = ClntAddr;
 	while(1){
 		memset(RxBuffer, 0, sizeof(RxBuffer));
 		memset(TxBuffer, 0, sizeof(TxBuffer));
-		if(recv(ConnectionSocketId, RxBuffer, C_SERVER_MAX_RX_BUFFER_SIZE, 0) == 0)
+		rxLen = recv(ConnectionSocketId, RxBuffer, C_SERVER_MAX_RX_BUFFER_SIZE, 0);
+		if(rxLen > 0)
+		{
+			Command_Parser::CommandParser::SendMessage(RxBuffer, rxLen);
+//			PrintAliveMsg(RxBuffer);
+		}
+		else if(rxLen < 0)
+		{
+			/* some error*/
+		}
+		else
 		{
 			return;
 		}
-		send(ConnectionSocketId, TxBuffer, strlen(TxBuffer), 0);
-		PrintAliveMsg(RxBuffer);
 	}
-
 }
 
 void CommunicationServer::SendMessage()

@@ -30,7 +30,7 @@ CommandParser::CommandParser()
 	attr.mq_curmsgs = 0;
 
 	msgQ_ID = mq_open("/MyMsgQ", O_CREAT | O_RDWR, 0777, &attr);
-	cout << "CommandParser msgQ_ID " << msgQ_ID << endl;
+//	cout << "CommandParser msgQ_ID " << msgQ_ID << endl;
 }
 
 CommandParser::~CommandParser()
@@ -49,10 +49,14 @@ void CommandParser::Run()
 	unsigned int msgPrio;
 	ssize_t msgLen = 0;
 
-	cout << "CommandParser started" << endl;
+//	cout << "CommandParser started" << endl;
 	while(1)
 	{
 		msgLen = mq_receive(msgQ_ID, (char *)&msgRcvd, sizeof(msgStruct), &msgPrio);
+		if(msgLen > 0)
+		{
+			ProcessInputMessage(&msgRcvd);
+		}
 	}
 }
 
@@ -66,15 +70,37 @@ void * CommandParser::CommandParserTask(void *)
 
 void CommandParser::ProcessInputMessage(msgStruct* msgRcvd)
 {
+	char* msg = (char*)msgRcvd;
+//	cout << "Msg received to process : " << msg << endl;
 
+	switch(msgRcvd->CommandType)
+	{
+	case 'a':
+		cout << "aaaaa" << endl;
+		break;
+	case 'b':
+		cout << "bbbbb" << endl;
+		break;
+	case 'c':
+		cout << "ccccc" << endl;
+		break;
+	default:
+		cout << "DDDDD" << endl;
+		break;
+	}
 }
 
-bool CommandParser::SendMessage(msgStruct *msg)
+bool CommandParser::SendMessage(char *msg, unsigned long int len)
 {
 	bool retVal = false;
-	unsigned int msgSentStatus;
 
-	msgSentStatus = mq_send(msgQ_ID, (char *)msg, sizeof(msgStruct), 0);
+	if(len <= sizeof(msgStruct))
+	{
+		if(mq_send(msgQ_ID, msg, len, 0) == 0)
+		{
+			retVal = true;
+		}
+	}
 	return retVal;
 }
 

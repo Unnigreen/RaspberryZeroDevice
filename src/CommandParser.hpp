@@ -46,7 +46,7 @@ public:
 	CommandParser();
 	~CommandParser();
 
-	static bool SendMessage(msgStruct *);
+	static bool SendMessage(char *, unsigned long int);
 	static void TaskEntry();
 	static void * CommandParserTask(void *);
 	void Run();

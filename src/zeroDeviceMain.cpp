@@ -23,7 +23,7 @@ using namespace std;
 
 int main() {
 
-//	piServerNs::piServer::StartTask();
+	piServerNs::piServer::StartTask();
 	Command_Parser::CommandParser::TaskEntry();
 
 	cout << "MAIN RUNNING " << endl;
@@ -34,14 +34,6 @@ int main() {
 	}
 	return 0;
 }
-
-typedef struct
-{
-	int a;
-	int b;
-	int c;
-	int d;
-}testMsg;
 
 void *thread_main_1(void *x_void_ptr)
 {
