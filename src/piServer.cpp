@@ -12,6 +12,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
+
 #include "SystemSettings.h"
 #include "CommandParser.hpp"
 
@@ -91,6 +92,7 @@ DiscoveryServer::DiscoveryServer()
 	DserverSocketId = socket(PF_INET, SOCK_DGRAM, 0);
 
 	/*Configure settings in address struct*/
+
 	srvrAddr.sin_family = AF_INET;
 	srvrAddr.sin_port = htons(D_SERVER_PORT);
 	srvrAddr.sin_addr.s_addr = htonl(INADDR_ANY);
