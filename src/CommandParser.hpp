@@ -41,6 +41,7 @@ private:
 
 	void ProcessInputMessage(msgStruct*);
 	bool SendSignal();
+	static void * CommandParserTask(void *);
 
 public:
 	CommandParser();
@@ -48,7 +49,6 @@ public:
 
 	static bool SendMessage(char *, unsigned long int);
 	static void TaskEntry();
-	static void * CommandParserTask(void *);
 	void Run();
 };
 
