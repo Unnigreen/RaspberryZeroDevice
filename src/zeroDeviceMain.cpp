@@ -12,6 +12,7 @@
 
 #include "piServer.hpp"
 #include "CommandParser.hpp"
+#include "ControlInterface.hpp"
 
 using namespace std;
 
@@ -25,6 +26,7 @@ int main() {
 
 	piServerNs::piServer::StartTask();
 	Command_Parser::CommandParser::TaskEntry();
+	Control_Interface::ControlInterface::StartTask();
 
 	cout << "MAIN RUNNING " << endl;
 

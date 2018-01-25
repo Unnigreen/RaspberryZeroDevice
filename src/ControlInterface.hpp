@@ -14,6 +14,7 @@ namespace Control_Interface
 class ControlInterface
 {
 private:
+	FILE * fptr;
 	static void * ControlInterfaceTask(void *);
 	void ProcessInputMessage();
 
